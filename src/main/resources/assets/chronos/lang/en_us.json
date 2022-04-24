@@ -1,0 +1,7 @@
+{
+  "item.chronos.chronos_clock_tooltip_speed": "Speed : %dx",
+  "item.chronos.chronos_clock_tooltip_sneak": "Press [%s] to adjust",
+  "item.chronos.chronos_clock_tooltip_scroll": "Scroll to set time",
+  "item.chronos.chronos_clock_tooltip_usage": "Hold right click to use",
+  "item.chronos.chronos_clock": "Chronos' Clock"
+}
