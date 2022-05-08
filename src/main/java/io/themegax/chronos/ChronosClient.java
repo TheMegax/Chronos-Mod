@@ -1,10 +1,10 @@
 package io.themegax.chronos;
 
 import io.themegax.chronos.mixin.HandledScreenAccessor;
+import io.themegax.chronos.sound.SoundEvents;
 import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
-import net.fabricmc.fabric.api.networking.v1.PacketByteBufs;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.screen.DownloadingTerrainScreen;
 import net.minecraft.client.gui.screen.ingame.HandledScreen;
@@ -12,16 +12,16 @@ import net.minecraft.client.network.ClientPlayerEntity;
 import net.minecraft.client.util.InputUtil;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
-import net.minecraft.network.PacketByteBuf;
 import net.minecraft.screen.slot.Slot;
-import net.minecraft.sound.SoundEvents;
+import net.minecraft.sound.SoundCategory;
 import net.minecraft.text.Text;
 import net.minecraft.text.TranslatableText;
 import net.minecraft.util.math.MathHelper;
 
 import javax.annotation.Nullable;
 
-import static io.themegax.chronos.ChronosMain.*;
+import static io.themegax.chronos.ChronosMain.CHRONOS_CLOCK;
+import static io.themegax.chronos.ChronosMain.SERVER_TICK_PACKET;
 
 public class ChronosClient implements ClientModInitializer {
 	boolean ticker = false;
@@ -115,13 +115,8 @@ public class ChronosClient implements ClientModInitializer {
 					chronosItem.storedTickrate += scroll/2f;
 					chronosItem.storedTickrate = MathHelper.clamp(chronosItem.storedTickrate, 1, 100);
 
-					PacketByteBuf buf = PacketByteBufs.create();
-
 					chronosStack.getOrCreateNbt().putFloat("storedTickrate", chronosItem.storedTickrate);
 
-					buf.writeItemStack(chronosStack);
-					buf.writeFloat(chronosItem.storedTickrate);
-					ClientPlayNetworking.send(CLOCK_SPEED_PACKET, buf);
 					scroll = 0;
 				}
 			}
@@ -139,10 +134,10 @@ public class ChronosClient implements ClientModInitializer {
 			Item offHand = player.getOffHandStack().getItem();
 			if (mainHand == CHRONOS_CLOCK || offHand == CHRONOS_CLOCK) {
 				if (ticker) {
-					player.playSound(SoundEvents.BLOCK_WOODEN_PRESSURE_PLATE_CLICK_ON, 0.3F, 0.6F);
+					player.playSound(SoundEvents.CLICK_1, SoundCategory.PLAYERS, 1f, 1f);
 				}
 				else {
-					player.playSound(SoundEvents.BLOCK_WOODEN_PRESSURE_PLATE_CLICK_OFF, 0.3F, 0.5F);
+					player.playSound(SoundEvents.CLICK_2, SoundCategory.PLAYERS, 1f, 1f);
 				}
 				ticker = !ticker;
 			}

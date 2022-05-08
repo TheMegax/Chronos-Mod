@@ -1,0 +1,14 @@
+{
+  "click_1": {
+    "subtitle": "subtitles.chronos.chronos_click",
+    "sounds": [
+      "chronos:click_1"
+    ]
+  },
+  "click_2": {
+    "subtitle": "subtitles.chronos.chronos_click",
+    "sounds": [
+      "chronos:click_2"
+    ]
+  }
+}
