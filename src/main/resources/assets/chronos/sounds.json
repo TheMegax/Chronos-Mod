@@ -10,5 +10,17 @@
     "sounds": [
       "chronos:click_2"
     ]
+  },
+  "ui.resonate": {
+    "subtitle": "subtitles.chronos.chronos_resonate",
+    "sounds": [
+      "chronos:ui.resonate"
+    ]
+  },
+  "ui.deactivate": {
+    "subtitle": "subtitles.chronos.chronos_deactivate",
+    "sounds": [
+      "chronos:ui.deactivate"
+    ]
   }
 }

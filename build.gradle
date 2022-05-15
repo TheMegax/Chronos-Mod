@@ -22,6 +22,14 @@ repositories {
 	maven {
 		url "https://maven.shedaniel.me/"
 	}
+	maven {
+		name = 'Ladysnake Mods'
+		url = 'https://ladysnake.jfrog.io/artifactory/mods'
+		content {
+			includeGroup 'io.github.ladysnake'
+			includeGroupByRegex 'io\\.github\\.onyxstudios.*'
+		}
+	}
 }
 
 dependencies {

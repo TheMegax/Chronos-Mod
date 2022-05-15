@@ -4,5 +4,8 @@
   "item.chronos.chronos_clock_tooltip_scroll": "Scroll to set time",
   "item.chronos.chronos_clock_tooltip_usage": "Hold right click to use",
   "item.chronos.chronos_clock": "Chronos' Clock",
-  "subtitles.chronos.chronos_click" : "Clock Ticking"
+  "actionbar.chronos.fail.not_configured": "Clock not configured!",
+  "subtitles.chronos.chronos_click" : "Clock Ticking",
+  "subtitles.chronos.chronos_resonate" : "Clock Activating",
+  "subtitles.chronos.chronos_deactivate" : "Clock Failing"
 }
