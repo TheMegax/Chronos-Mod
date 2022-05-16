@@ -1,6 +1,16 @@
 {
   "parent": "item/generated",
   "textures": {
-    "layer0": "chronos:item/chronos_clock"
-  }
+    "layer0": "chronos:item/chronos_clock_7"
+  },
+  "overrides": [
+    { "predicate": { "angle": 0.000000 }, "model": "chronos:item/chronos_clock" },
+    { "predicate": { "angle": 0.125000 }, "model": "chronos:item/chronos_clock_8" },
+    { "predicate": { "angle": 0.250000 }, "model": "chronos:item/chronos_clock_1" },
+    { "predicate": { "angle": 0.375000 }, "model": "chronos:item/chronos_clock_2" },
+    { "predicate": { "angle": 0.500000 }, "model": "chronos:item/chronos_clock_3" },
+    { "predicate": { "angle": 0.625000 }, "model": "chronos:item/chronos_clock_4" },
+    { "predicate": { "angle": 0.750000 }, "model": "chronos:item/chronos_clock_5" },
+    { "predicate": { "angle": 0.875000 }, "model": "chronos:item/chronos_clock_6" }
+  ]
 }

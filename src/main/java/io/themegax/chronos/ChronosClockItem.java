@@ -12,6 +12,7 @@ import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
+import net.minecraft.particle.DefaultParticleType;
 import net.minecraft.particle.ItemStackParticleEffect;
 import net.minecraft.particle.ParticleTypes;
 import net.minecraft.server.MinecraftServer;
@@ -69,23 +70,18 @@ public class ChronosClockItem extends Item {
             server = entity.getServer();
         }
         if (world.isClient()) {
+            stack.getOrCreateNbt().putFloat("storedTickrate", prevTickrate);
             float newStoredTickrate = stack.getNbt().getFloat("storedTickrate");
             if (prevTickrate != newStoredTickrate) {
                 this.storedTickrate = newStoredTickrate;
             }
             prevTickrate = newStoredTickrate;
-            stack.getOrCreateNbt().putFloat("storedTickrate", prevTickrate);
         }
     }
 
     @Override
-    public boolean isNbtSynced() {
-        return false;
-    }
-
-    @Override
     public void usageTick(World world, LivingEntity user, ItemStack stack, int remainingUseTicks) {
-        for (int i = 0; i < 3; i++) {
+        for (int i = 0; i < 6; i++) {
             Random random = user.getRandom();
             world.addParticle(ParticleTypes.PORTAL, user.getParticleX(0.5), user.getRandomBodyY() - 0.25, user.getParticleZ(1), (random.nextDouble() - 0.5) * 2.0, -random.nextDouble(), (random.nextDouble() - 0.5) * 2.0);
         }
@@ -113,18 +109,13 @@ public class ChronosClockItem extends Item {
             ClientPlayerEntity clientPlayer = MinecraftClient.getInstance().player;
             if (clientPlayer != null) {
                 if (shouldSpawnParticles()) {
-                    Random random = world.random;
-                    double r = clientPlayer.getBlockX() + 0.5;
-                    double s = clientPlayer.getBlockY() + 0.5;
-                    double d = clientPlayer.getBlockZ() + 0.5;
-                    ItemStackParticleEffect particleEffect = new ItemStackParticleEffect(ParticleTypes.ITEM, new ItemStack(Items.GLASS));
+                    double r = clientPlayer.getX();
+                    double s = clientPlayer.getY() + 0.5;
+                    double d = clientPlayer.getZ();
 
-                    for (int t = 0; t < 8; ++t) {
-                        world.addParticle(particleEffect, r, s, d, random.nextGaussian() * 0.15, random.nextDouble() * 0.2, random.nextGaussian() * 0.15);
-                    }
                     for (double e = 0.0; e < Math.PI * 2; e += 0.15707963267948966) {
-                        world.addParticle(particleEffect, r + Math.cos(e) * 3.0, s - 0.4, d + Math.sin(e) * 3.0, Math.cos(e) * -0.5, 0.0, Math.sin(e) * -0.5);
-                        world.addParticle(particleEffect, r + Math.cos(e) * 3.0, s - 0.4, d + Math.sin(e) * 3.0, Math.cos(e) * -0.7, 0.0, Math.sin(e) * -0.7);
+                        world.addParticle(ParticleTypes.EFFECT, r, s, d, Math.cos(e) * -0.5, 0.0, Math.sin(e) * -0.5);
+                        world.addParticle(ParticleTypes.EFFECT, r, s, d, Math.cos(e) * -0.7, 0.0, Math.sin(e) * -0.7);
                     }
                     clientPlayer.playSound(SoundEvents.BLOCK_BELL_USE, SoundCategory.PLAYERS, 1f, 1f);
                 }
@@ -175,7 +166,7 @@ public class ChronosClockItem extends Item {
     }
 
     public int getMaxUseTime(ItemStack stack) {
-        return 35;
+        return 38;
     }
 
     public UseAction getUseAction(ItemStack stack) {

@@ -4,6 +4,7 @@ import io.themegax.chronos.mixin.HandledScreenAccessor;
 import io.themegax.chronos.sound.ChronosSoundEvents;
 import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
+import net.fabricmc.fabric.api.object.builder.v1.client.model.FabricModelPredicateProviderRegistry;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.screen.DownloadingTerrainScreen;
 import net.minecraft.client.gui.screen.ingame.HandledScreen;
@@ -16,6 +17,7 @@ import net.minecraft.screen.slot.Slot;
 import net.minecraft.sound.SoundCategory;
 import net.minecraft.text.Text;
 import net.minecraft.text.TranslatableText;
+import net.minecraft.util.Identifier;
 import net.minecraft.util.math.MathHelper;
 
 import javax.annotation.Nullable;
@@ -28,11 +30,13 @@ public class ChronosClient implements ClientModInitializer {
 	public static Text sneakKeyString = null;
 	public static int scroll;
 	private static int secondTicker = 0;
+	private static float angle = 0;
 
 	@Override
 	public void onInitializeClient() {
 		ClientTickEvents.START_CLIENT_TICK.register(this::onClientTick);
 		ClientTickEvents.START_WORLD_TICK.register(this::onWorldTick);
+		FabricModelPredicateProviderRegistry.register(CHRONOS_CLOCK, new Identifier("angle"), (stack, world, entity, seed) -> angle/8);
 	}
 
 	private void onWorldTick(ClientWorld clientWorld) {
@@ -42,6 +46,9 @@ public class ChronosClient implements ClientModInitializer {
 			secondTicker++;
 			if (secondTicker >= 20) {
 				secondTicker = 0;
+				angle++;
+				if (angle >= 8) angle = 0;
+				ticker = !ticker;
 				Item mainHand = player.getMainHandStack().getItem();
 				Item offHand = player.getOffHandStack().getItem();
 				if (mainHand == CHRONOS_CLOCK || offHand == CHRONOS_CLOCK) {
@@ -51,7 +58,6 @@ public class ChronosClient implements ClientModInitializer {
 					else {
 						player.playSound(ChronosSoundEvents.CLICK_2, SoundCategory.PLAYERS, 1f, 1f);
 					}
-					ticker = !ticker;
 				}
 			}
 		}
