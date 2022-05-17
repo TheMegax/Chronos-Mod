@@ -1,17 +1,20 @@
 package io.themegax.chronos;
 
+import io.themegax.chronos.config.ChronosConfig;
 import io.themegax.chronos.mixin.HandledScreenAccessor;
 import io.themegax.chronos.sound.ChronosSoundEvents;
+import me.lortseam.completeconfig.gui.ConfigScreenBuilder;
+import me.lortseam.completeconfig.gui.cloth.ClothConfigScreenBuilder;
 import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
 import net.fabricmc.fabric.api.object.builder.v1.client.model.FabricModelPredicateProviderRegistry;
+import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.screen.DownloadingTerrainScreen;
 import net.minecraft.client.gui.screen.ingame.HandledScreen;
 import net.minecraft.client.network.ClientPlayerEntity;
 import net.minecraft.client.util.InputUtil;
 import net.minecraft.client.world.ClientWorld;
-import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.screen.slot.Slot;
 import net.minecraft.sound.SoundCategory;
@@ -23,6 +26,7 @@ import net.minecraft.util.math.MathHelper;
 import javax.annotation.Nullable;
 
 import static io.themegax.chronos.ChronosMain.CHRONOS_CLOCK;
+import static io.themegax.chronos.ChronosMain.modID;
 
 public class ChronosClient implements ClientModInitializer {
 	boolean ticker = false;
@@ -36,7 +40,16 @@ public class ChronosClient implements ClientModInitializer {
 	public void onInitializeClient() {
 		ClientTickEvents.START_CLIENT_TICK.register(this::onClientTick);
 		ClientTickEvents.START_WORLD_TICK.register(this::onWorldTick);
-		FabricModelPredicateProviderRegistry.register(CHRONOS_CLOCK, new Identifier("angle"), (stack, world, entity, seed) -> angle/8);
+		FabricModelPredicateProviderRegistry.register(CHRONOS_CLOCK, new Identifier("angle"), (stack, world, entity, seed) -> {
+			if (isClockBroken(stack)) {
+				return 1;
+			}
+			return angle/8;
+		});
+
+		if (FabricLoader.getInstance().isModLoaded("cloth-config")) {
+			ConfigScreenBuilder.setMain(modID, new ClothConfigScreenBuilder());
+		}
 	}
 
 	private void onWorldTick(ClientWorld clientWorld) {
@@ -49,27 +62,34 @@ public class ChronosClient implements ClientModInitializer {
 				angle++;
 				if (angle >= 8) angle = 0;
 				ticker = !ticker;
-				Item mainHand = player.getMainHandStack().getItem();
-				Item offHand = player.getOffHandStack().getItem();
-				if (mainHand == CHRONOS_CLOCK || offHand == CHRONOS_CLOCK) {
-					if (ticker) {
-						player.playSound(ChronosSoundEvents.CLICK_1, SoundCategory.PLAYERS, 1f, 1f);
-					}
-					else {
-						player.playSound(ChronosSoundEvents.CLICK_2, SoundCategory.PLAYERS, 1f, 1f);
+				ItemStack mainStack = player.getMainHandStack();
+				ItemStack offStack = player.getOffHandStack();
+
+				if (mainStack.isOf(CHRONOS_CLOCK) || offStack.isOf(CHRONOS_CLOCK)) {
+					if (!(isClockBroken(mainStack) && isClockBroken(offStack))) {
+						if (ticker) {
+							player.playSound(ChronosSoundEvents.CLICK_1, SoundCategory.PLAYERS, 1f, 1f);
+						}
+						else {
+							player.playSound(ChronosSoundEvents.CLICK_2, SoundCategory.PLAYERS, 1f, 1f);
+						}
 					}
 				}
 			}
 		}
 	}
-
+	public static boolean isClockBroken(ItemStack stack) {
+		if (ChronosConfig.getMaxDurability() == 0) return false;
+		if (!stack.isOf(ChronosMain.CHRONOS_CLOCK)) return true;
+		return (stack.getMaxDamage() - stack.getDamage() == 1);
+	}
 	public static void scrollMouse(int scroll) {
 		MinecraftClient client = MinecraftClient.getInstance();
 		ClientPlayerEntity player = client.player;
 		Slot itemSlot = getHoverSlot();
 		if (itemSlot != null) {
-			Item clockItem = getHoverSlot().getStack().getItem();
-			if (player != null && isSneakKeyPressed && clockItem instanceof ChronosClockItem) {
+			ItemStack clockStack = getHoverSlot().getStack();
+			if (player != null && isSneakKeyPressed && clockStack.isOf(CHRONOS_CLOCK)) {
 				ChronosClient.scroll += scroll;
 			}
 		}

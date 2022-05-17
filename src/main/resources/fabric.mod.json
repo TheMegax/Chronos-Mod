@@ -1,10 +1,10 @@
 {
   "schemaVersion": 1,
-  "id": "chronos-fabric",
+  "id": "chronos",
   "version": "${version}",
 
   "name": "Chronos",
-  "description": "Time at the palm of your hand",
+  "description": "Time at the palm of your hand.",
   "authors": [
     "TheMegax"
   ],

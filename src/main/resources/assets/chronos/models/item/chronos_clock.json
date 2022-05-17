@@ -11,6 +11,7 @@
     { "predicate": { "angle": 0.500000 }, "model": "chronos:item/chronos_clock_3" },
     { "predicate": { "angle": 0.625000 }, "model": "chronos:item/chronos_clock_4" },
     { "predicate": { "angle": 0.750000 }, "model": "chronos:item/chronos_clock_5" },
-    { "predicate": { "angle": 0.875000 }, "model": "chronos:item/chronos_clock_6" }
+    { "predicate": { "angle": 0.875000 }, "model": "chronos:item/chronos_clock_6" },
+    { "predicate": { "angle": 1.000000 }, "model": "chronos:item/chronos_clock_broken" }
   ]
 }

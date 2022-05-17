@@ -1,5 +1,6 @@
 package io.themegax.chronos;
 
+import io.themegax.chronos.config.ChronosConfig;
 import io.themegax.chronos.sound.ChronosSoundEvents;
 import net.fabricmc.api.ModInitializer;
 import net.fabricmc.fabric.api.item.v1.FabricItemSettings;
@@ -13,12 +14,14 @@ import org.slf4j.LoggerFactory;
 
 @SuppressWarnings("unused")
 public class ChronosMain implements ModInitializer {
-	public static String modID = "chronos";
+	public static final String modID = "chronos";
 	public static final Logger LOGGER = LoggerFactory.getLogger("Chronos");
-	public static final Item CHRONOS_CLOCK = new ChronosClockItem(new FabricItemSettings().group(ItemGroup.TOOLS).maxCount(1).rarity(Rarity.UNCOMMON));
+	public static Item CHRONOS_CLOCK = null;
 
 	@Override
 	public void onInitialize() {
+		new ChronosConfig(modID).load();
+		CHRONOS_CLOCK = new ChronosClockItem(new FabricItemSettings().group(ItemGroup.TOOLS).maxCount(1).rarity(Rarity.UNCOMMON).maxDamage(ChronosConfig.getMaxDurability()).fireproof());
 		Registry.register(Registry.ITEM, new Identifier(modID, "chronos_clock"), CHRONOS_CLOCK);
 		ChronosSoundEvents.init();
 	}

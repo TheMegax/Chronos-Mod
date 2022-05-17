@@ -1,11 +1,20 @@
 {
   "item.chronos.chronos_clock_tooltip_speed": "Speed : %dx",
   "item.chronos.chronos_clock_tooltip_sneak": "Press [%s] to adjust",
+  "item.chronos.chronos_clock_tooltip_broken_1": "It's broken!",
+  "item.chronos.chronos_clock_tooltip_broken_2": "Repair it with a %s in an anvil",
   "item.chronos.chronos_clock_tooltip_scroll": "Scroll to set time",
   "item.chronos.chronos_clock_tooltip_usage": "Hold right click to use",
   "item.chronos.chronos_clock": "Chronos' Clock",
   "actionbar.chronos.fail.not_configured": "Clock not configured!",
+  "actionbar.chronos.fail.not_enough_xp": "Not enough experience!",
+  "actionbar.chronos.fail.not_enough_hp": "Your health is too low!",
   "subtitles.chronos.chronos_click" : "Clock Ticking",
   "subtitles.chronos.chronos_resonate" : "Clock Activating",
-  "subtitles.chronos.chronos_deactivate" : "Clock Failing"
+  "subtitles.chronos.chronos_deactivate" : "Clock Failing",
+  "config.chronos.xpCost" : "Experience cost",
+  "config.chronos.healthCost" : "Health cost",
+  "config.chronos.maxDurability" : "Clock durability (requires restart)",
+  "config.chronos.cooldownSeconds" : "Clock cooldown",
+  "config.chronos.repairItem" : "Repair item"
 }

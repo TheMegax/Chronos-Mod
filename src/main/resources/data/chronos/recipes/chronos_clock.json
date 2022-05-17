@@ -1,0 +1,23 @@
+{
+    "type": "minecraft:crafting_shaped",
+    "pattern": [
+        "nc ",
+        "cQc",
+        " c "
+    ],
+    "key": {
+        "n": {
+            "item": "minecraft:netherite_ingot"
+        },
+        "c": {
+            "item": "minecraft:copper_ingot"
+        },
+        "Q": {
+            "item": "minecraft:quartz_block"
+        }
+    },
+    "result": {
+        "item": "chronos:chronos_clock",
+        "count": 1
+    }
+}

@@ -1,5 +1,6 @@
 package io.themegax.chronos;
 
+import io.themegax.chronos.config.ChronosConfig;
 import io.themegax.chronos.sound.ChronosSoundEvents;
 import io.themegax.slowmo.api.TickrateApi;
 import net.minecraft.client.MinecraftClient;
@@ -8,12 +9,10 @@ import net.minecraft.client.network.ClientPlayerEntity;
 import net.minecraft.client.sound.SoundManager;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.LivingEntity;
+import net.minecraft.entity.damage.DamageSource;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
-import net.minecraft.item.Items;
-import net.minecraft.particle.DefaultParticleType;
-import net.minecraft.particle.ItemStackParticleEffect;
 import net.minecraft.particle.ParticleTypes;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.sound.SoundCategory;
@@ -36,12 +35,13 @@ public class ChronosClockItem extends Item {
         super(settings);
     }
 
-    public float storedTickrate = DEFAULT_TICKRATE;
-    private static float prevTickrate = DEFAULT_TICKRATE;
+    public float storedTickrate = 0;
     private MinecraftServer server;
 
     @Override
     public TypedActionResult<ItemStack> use(World world, PlayerEntity user, Hand hand) {
+        if (!isUsable(user.getStackInHand(hand))) return TypedActionResult.fail(user.getStackInHand(hand));
+
         if (!world.isClient) user.setCurrentHand(hand);
         else {
             playSoundOnce(ChronosSoundEvents.RESONATE.getId(), user, ChronosSoundEvents.RESONATE);
@@ -65,18 +65,32 @@ public class ChronosClockItem extends Item {
     }
 
     @Override
+    public boolean isEnchantable(ItemStack stack) {
+        return false;
+    }
+
+    @Override
     public void inventoryTick(ItemStack stack, World world, Entity entity, int slot, boolean selected) {
         if (server == null) {
             server = entity.getServer();
         }
-        if (world.isClient()) {
-            stack.getOrCreateNbt().putFloat("storedTickrate", prevTickrate);
-            float newStoredTickrate = stack.getNbt().getFloat("storedTickrate");
-            if (prevTickrate != newStoredTickrate) {
-                this.storedTickrate = newStoredTickrate;
-            }
-            prevTickrate = newStoredTickrate;
+        if (stack.getDamage() >= stack.getMaxDamage()) stack.setDamage(stack.getMaxDamage()-1);
+
+        if (!world.isClient && storedTickrate == 0) {
+            stack.getOrCreateNbt();
+            assert stack.getNbt() != null;
+            this.storedTickrate = stack.getNbt().getFloat("storedTickrate");
         }
+    }
+
+    @Override
+    public boolean canRepair(ItemStack stack, ItemStack ingredient) {
+        return ingredient.isOf(ChronosConfig.getRepairItem());
+    }
+
+    public static boolean isUsable(ItemStack stack) {
+        if (ChronosConfig.getMaxDurability() == 0) return true;
+        return stack.getDamage() < stack.getMaxDamage() - 1;
     }
 
     @Override
@@ -108,7 +122,11 @@ public class ChronosClockItem extends Item {
             MinecraftClient client = MinecraftClient.getInstance();
             ClientPlayerEntity clientPlayer = MinecraftClient.getInstance().player;
             if (clientPlayer != null) {
-                if (shouldSpawnParticles()) {
+                boolean hasEnoughHealth = clientPlayer.isCreative() || clientPlayer.getHealth() > ChronosConfig.getHealthCost();
+                boolean hasEnoughXp = clientPlayer.isCreative() || clientPlayer.totalExperience >= ChronosConfig.getXpCost();
+
+
+                if (shouldSpawnParticles() && hasEnoughHealth && hasEnoughXp) {
                     double r = clientPlayer.getX();
                     double s = clientPlayer.getY() + 0.5;
                     double d = clientPlayer.getZ();
@@ -118,26 +136,54 @@ public class ChronosClockItem extends Item {
                         world.addParticle(ParticleTypes.EFFECT, r, s, d, Math.cos(e) * -0.7, 0.0, Math.sin(e) * -0.7);
                     }
                     clientPlayer.playSound(SoundEvents.BLOCK_BELL_USE, SoundCategory.PLAYERS, 1f, 1f);
+                    return stack;
+                }
+
+                if (!hasEnoughHealth) {
+                    clientPlayer.sendMessage(new TranslatableText("actionbar.chronos.fail.not_enough_hp").formatted(Formatting.RED), true);
+                }
+                else if (!hasEnoughXp) {
+                    clientPlayer.sendMessage(new TranslatableText("actionbar.chronos.fail.not_enough_xp").formatted(Formatting.RED), true);
                 }
                 else {
                     clientPlayer.sendMessage(new TranslatableText("actionbar.chronos.fail.not_configured").formatted(Formatting.RED), true);
-                    clientPlayer.playSound(ChronosSoundEvents.DEACTIVATE, SoundCategory.PLAYERS, 1f, 1f);
-                    client.getSoundManager().stopSounds(ChronosSoundEvents.RESONATE.getId(), SoundCategory.PLAYERS);
                 }
+                clientPlayer.playSound(ChronosSoundEvents.DEACTIVATE, SoundCategory.PLAYERS, 1f, 1f);
+                client.getSoundManager().stopSounds(ChronosSoundEvents.RESONATE.getId(), SoundCategory.PLAYERS);
             }
             return stack;
         }
         if (user instanceof PlayerEntity player && player.getServer() != null) {
-            MinecraftServer server = player.getServer();
-            float oldServerTickrate = TickrateApi.getServerTickrate(server);
-            TickrateApi.setServerTickrate(oldServerTickrate != storedTickrate ? storedTickrate : DEFAULT_TICKRATE, player.getServer());
-            float newServerTickrate = TickrateApi.getServerTickrate(server);
+            boolean hasEnoughHealth = player.isCreative() || player.getHealth() > ChronosConfig.getHealthCost();
+            boolean hasEnoughXp = player.isCreative() || player.totalExperience >= ChronosConfig.getXpCost();
 
-            if (player.isCreative() || oldServerTickrate == newServerTickrate) {
+            if (hasEnoughHealth && hasEnoughXp) {
+                MinecraftServer server = player.getServer();
+                float oldServerTickrate = TickrateApi.getServerTickrate(server);
+                TickrateApi.setServerTickrate(oldServerTickrate != storedTickrate ? storedTickrate : DEFAULT_TICKRATE, player.getServer());
+                float newServerTickrate = TickrateApi.getServerTickrate(server);
+
+                if (player.isCreative() || oldServerTickrate == newServerTickrate) {
+                    player.getItemCooldownManager().set(this, 40);
+                }
+                else {
+                    player.getItemCooldownManager().set(this, ChronosConfig.getCooldown());
+                    if (!player.isCreative()) {
+                        player.damage(DamageSource.MAGIC, ChronosConfig.getHealthCost());
+                        player.addExperience(-ChronosConfig.getXpCost());
+                    }
+                    player.incrementStat(Stats.USED.getOrCreateStat(this));
+                    if (stack.getMaxDamage() - stack.getDamage() > 0) {
+                        stack.damage(1, player, p -> p.sendToolBreakStatus(player.getActiveHand()));
+                    }
+                }
+                stack.getOrCreateNbt();
+                assert stack.getNbt() != null;
+                stack.getOrCreateNbt().putFloat("storedTickrate", storedTickrate);
+            }
+            else {
                 player.getItemCooldownManager().set(this, 40);
             }
-            else player.getItemCooldownManager().set(this, 200);
-            player.incrementStat(Stats.USED.getOrCreateStat(this));
         }
         return stack;
     }
@@ -152,16 +198,22 @@ public class ChronosClockItem extends Item {
             isSneaking = ChronosClient.isSneakKeyPressed;
         }
 
-        if (isSneaking) {
-            tooltip.add(new TranslatableText("item.chronos.chronos_clock_tooltip_speed", String.format("%.2f", tps_speed)));
-            tooltip.add(new TranslatableText("item.chronos.chronos_clock_tooltip_scroll").formatted(Formatting.GOLD));
-            tooltip.add(new TranslatableText("item.chronos.chronos_clock_tooltip_usage").formatted(Formatting.GOLD));
+        tooltip.add(new TranslatableText("item.chronos.chronos_clock_tooltip_speed", String.format("%.2f", tps_speed)));
+
+        if (isUsable(itemStack)) {
+            if (isSneaking) {
+                tooltip.add(new TranslatableText("item.chronos.chronos_clock_tooltip_scroll").formatted(Formatting.GOLD));
+                tooltip.add(new TranslatableText("item.chronos.chronos_clock_tooltip_usage").formatted(Formatting.GOLD));
+            }
+            else {
+                if (ChronosClient.sneakKeyString != null) {
+                    tooltip.add(new TranslatableText("item.chronos.chronos_clock_tooltip_sneak", ChronosClient.sneakKeyString).formatted(Formatting.LIGHT_PURPLE));
+                }
+            }
         }
         else {
-            tooltip.add(new TranslatableText("item.chronos.chronos_clock_tooltip_speed", String.format("%.2f", tps_speed)));
-            if (ChronosClient.sneakKeyString != null) {
-                tooltip.add(new TranslatableText("item.chronos.chronos_clock_tooltip_sneak", ChronosClient.sneakKeyString).formatted(Formatting.LIGHT_PURPLE));
-            }
+            tooltip.add(new TranslatableText("item.chronos.chronos_clock_tooltip_broken_1").formatted(Formatting.RED));
+            tooltip.add(new TranslatableText("item.chronos.chronos_clock_tooltip_broken_2", ChronosConfig.getRepairItem().getName()).formatted(Formatting.LIGHT_PURPLE));
         }
     }
 
