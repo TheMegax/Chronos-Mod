@@ -8,7 +8,7 @@ import net.minecraft.util.Identifier;
 import net.minecraft.util.registry.Registry;
 
 @SuppressWarnings("all")
-@ConfigEntries
+@ConfigEntries(includeAll = true)
 public final class ChronosConfig extends Config implements ConfigContainer {
 
     private static int xpCost = 50;

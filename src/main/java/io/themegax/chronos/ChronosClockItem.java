@@ -20,12 +20,11 @@ import net.minecraft.sound.SoundEvent;
 import net.minecraft.sound.SoundEvents;
 import net.minecraft.stat.Stats;
 import net.minecraft.text.Text;
-import net.minecraft.text.TranslatableText;
 import net.minecraft.util.*;
+import net.minecraft.util.math.random.Random;
 import net.minecraft.world.World;
 
 import java.util.List;
-import java.util.Random;
 
 import static io.themegax.slowmo.SlowmoMain.DEFAULT_TICKRATE;
 
@@ -36,6 +35,8 @@ public class ChronosClockItem extends Item {
     }
 
     public float storedTickrate = 0;
+
+    private float prevServerTickrate = DEFAULT_TICKRATE;
     private MinecraftServer server;
 
     @Override
@@ -125,7 +126,6 @@ public class ChronosClockItem extends Item {
                 boolean hasEnoughHealth = clientPlayer.isCreative() || clientPlayer.getHealth() > ChronosConfig.getHealthCost();
                 boolean hasEnoughXp = clientPlayer.isCreative() || clientPlayer.totalExperience >= ChronosConfig.getXpCost();
 
-
                 if (shouldSpawnParticles() && hasEnoughHealth && hasEnoughXp) {
                     double r = clientPlayer.getX();
                     double s = clientPlayer.getY() + 0.5;
@@ -140,13 +140,13 @@ public class ChronosClockItem extends Item {
                 }
 
                 if (!hasEnoughHealth) {
-                    clientPlayer.sendMessage(new TranslatableText("actionbar.chronos.fail.not_enough_hp").formatted(Formatting.RED), true);
+                    clientPlayer.sendMessage(Text.translatable("actionbar.chronos.fail.not_enough_hp").formatted(Formatting.RED), true);
                 }
                 else if (!hasEnoughXp) {
-                    clientPlayer.sendMessage(new TranslatableText("actionbar.chronos.fail.not_enough_xp").formatted(Formatting.RED), true);
+                    clientPlayer.sendMessage(Text.translatable("actionbar.chronos.fail.not_enough_xp").formatted(Formatting.RED), true);
                 }
                 else {
-                    clientPlayer.sendMessage(new TranslatableText("actionbar.chronos.fail.not_configured").formatted(Formatting.RED), true);
+                    clientPlayer.sendMessage(Text.translatable("actionbar.chronos.fail.not_configured").formatted(Formatting.RED), true);
                 }
                 clientPlayer.playSound(ChronosSoundEvents.DEACTIVATE, SoundCategory.PLAYERS, 1f, 1f);
                 client.getSoundManager().stopSounds(ChronosSoundEvents.RESONATE.getId(), SoundCategory.PLAYERS);
@@ -160,6 +160,8 @@ public class ChronosClockItem extends Item {
             if (hasEnoughHealth && hasEnoughXp) {
                 MinecraftServer server = player.getServer();
                 float oldServerTickrate = TickrateApi.getServerTickrate(server);
+                if (oldServerTickrate != storedTickrate)
+                    prevServerTickrate = oldServerTickrate;
                 TickrateApi.setServerTickrate(oldServerTickrate != storedTickrate ? storedTickrate : DEFAULT_TICKRATE, player.getServer());
                 float newServerTickrate = TickrateApi.getServerTickrate(server);
 
@@ -198,22 +200,22 @@ public class ChronosClockItem extends Item {
             isSneaking = ChronosClient.isSneakKeyPressed;
         }
 
-        tooltip.add(new TranslatableText("item.chronos.chronos_clock_tooltip_speed", String.format("%.2f", tps_speed)));
+        tooltip.add(Text.translatable("item.chronos.chronos_clock_tooltip_speed", String.format("%.2f", tps_speed)));
 
         if (isUsable(itemStack)) {
             if (isSneaking) {
-                tooltip.add(new TranslatableText("item.chronos.chronos_clock_tooltip_scroll").formatted(Formatting.GOLD));
-                tooltip.add(new TranslatableText("item.chronos.chronos_clock_tooltip_usage").formatted(Formatting.GOLD));
+                tooltip.add(Text.translatable("item.chronos.chronos_clock_tooltip_scroll").formatted(Formatting.GOLD));
+                tooltip.add(Text.translatable("item.chronos.chronos_clock_tooltip_usage").formatted(Formatting.GOLD));
             }
             else {
                 if (ChronosClient.sneakKeyString != null) {
-                    tooltip.add(new TranslatableText("item.chronos.chronos_clock_tooltip_sneak", ChronosClient.sneakKeyString).formatted(Formatting.LIGHT_PURPLE));
+                    tooltip.add(Text.translatable("item.chronos.chronos_clock_tooltip_sneak", ChronosClient.sneakKeyString).formatted(Formatting.LIGHT_PURPLE));
                 }
             }
         }
         else {
-            tooltip.add(new TranslatableText("item.chronos.chronos_clock_tooltip_broken_1").formatted(Formatting.RED));
-            tooltip.add(new TranslatableText("item.chronos.chronos_clock_tooltip_broken_2", ChronosConfig.getRepairItem().getName()).formatted(Formatting.LIGHT_PURPLE));
+            tooltip.add(Text.translatable("item.chronos.chronos_clock_tooltip_broken_1").formatted(Formatting.RED));
+            tooltip.add(Text.translatable("item.chronos.chronos_clock_tooltip_broken_2", ChronosConfig.getRepairItem().getName()).formatted(Formatting.LIGHT_PURPLE));
         }
     }
 
@@ -226,8 +228,12 @@ public class ChronosClockItem extends Item {
     }
 
     private boolean shouldSpawnParticles() {
-        if (server != null && TickrateApi.getServerTickrate(server) != storedTickrate)
-            return true;
-        else return (storedTickrate != DEFAULT_TICKRATE);
+        if (server != null) {
+            if ((prevServerTickrate != storedTickrate) || (prevServerTickrate != DEFAULT_TICKRATE)) {
+                prevServerTickrate = DEFAULT_TICKRATE;
+                return true;
+            }
+        }
+        return false;
     }
 }

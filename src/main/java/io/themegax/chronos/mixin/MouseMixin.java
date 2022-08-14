@@ -14,7 +14,7 @@ public abstract class MouseMixin {
     @Inject(method = "onMouseScroll", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/screen/Screen;mouseScrolled(DDD)Z"))
     public void onMouseScroll(long window, double horizontal, double vertical, CallbackInfo ci) {
         MinecraftClient client = MinecraftClient.getInstance();
-        double d = (client.options.discreteMouseScroll ? Math.signum(vertical) : vertical) * client.options.mouseWheelSensitivity;
+        double d = (client.options.getDiscreteMouseScroll().getValue() ? Math.signum(vertical) : vertical) * client.options.getMouseWheelSensitivity().getValue();
         this.eventDeltaWheel += d;
         int i = (int)this.eventDeltaWheel;
         if (i == 0) {

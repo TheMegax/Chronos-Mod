@@ -7,11 +7,11 @@ import me.lortseam.completeconfig.gui.ConfigScreenBuilder;
 import me.lortseam.completeconfig.gui.cloth.ClothConfigScreenBuilder;
 import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
-import net.fabricmc.fabric.api.object.builder.v1.client.model.FabricModelPredicateProviderRegistry;
 import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.screen.DownloadingTerrainScreen;
 import net.minecraft.client.gui.screen.ingame.HandledScreen;
+import net.minecraft.client.item.ModelPredicateProviderRegistry;
 import net.minecraft.client.network.ClientPlayerEntity;
 import net.minecraft.client.util.InputUtil;
 import net.minecraft.client.world.ClientWorld;
@@ -19,7 +19,6 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.screen.slot.Slot;
 import net.minecraft.sound.SoundCategory;
 import net.minecraft.text.Text;
-import net.minecraft.text.TranslatableText;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.math.MathHelper;
 
@@ -40,7 +39,7 @@ public class ChronosClient implements ClientModInitializer {
 	public void onInitializeClient() {
 		ClientTickEvents.START_CLIENT_TICK.register(this::onClientTick);
 		ClientTickEvents.START_WORLD_TICK.register(this::onWorldTick);
-		FabricModelPredicateProviderRegistry.register(CHRONOS_CLOCK, new Identifier("angle"), (stack, world, entity, seed) -> {
+		ModelPredicateProviderRegistry.register(CHRONOS_CLOCK, new Identifier("angle"), (stack, world, entity, seed) -> {
 			if (isClockBroken(stack)) {
 				return 1;
 			}
@@ -133,8 +132,8 @@ public class ChronosClient implements ClientModInitializer {
 				String boundedSneakTranslation = client.options.sneakKey.getBoundKeyTranslationKey();
 				Text boundedSneakText = client.options.sneakKey.getBoundKeyLocalizedText();
 
-				if (boundedSneakText.asString().equals("")) {
-					sneakKeyString = new TranslatableText(boundedSneakTranslation);
+				if (boundedSneakText.getString().equals("")) {
+					sneakKeyString = Text.translatable(boundedSneakTranslation);
 				}
 				else {
 					sneakKeyString = boundedSneakText;
