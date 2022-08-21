@@ -1,12 +1,16 @@
 package io.themegax.chronos;
 
 import io.themegax.chronos.config.ChronosConfig;
+import io.themegax.chronos.ext.PlayerEntityExt;
+import io.themegax.chronos.mixin.sound.SoundManagerAccessor;
+import io.themegax.chronos.ext.SoundSystemExt;
 import io.themegax.chronos.sound.ChronosSoundEvents;
 import io.themegax.slowmo.api.TickrateApi;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.item.TooltipContext;
 import net.minecraft.client.network.ClientPlayerEntity;
 import net.minecraft.client.sound.SoundManager;
+import net.minecraft.client.sound.SoundSystem;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.damage.DamageSource;
@@ -35,7 +39,6 @@ public class ChronosClockItem extends Item {
     }
 
     public float storedTickrate = 0;
-
     private float prevServerTickrate = DEFAULT_TICKRATE;
     private MinecraftServer server;
 
@@ -53,8 +56,10 @@ public class ChronosClockItem extends Item {
     private void playSoundOnce(Identifier id, PlayerEntity user, SoundEvent soundEvent) {
         MinecraftClient client = MinecraftClient.getInstance();
         SoundManager soundManager = client.getSoundManager();
-        soundManager.stopSounds(id, SoundCategory.PLAYERS);
-        user.playSound(soundEvent, SoundCategory.PLAYERS, 1, 1);
+        SoundSystem soundSystem = ((SoundManagerAccessor) soundManager).getSoundSystem();
+        if (!((SoundSystemExt)soundSystem).isPlayingById(id)) {
+            user.playSound(soundEvent, SoundCategory.PLAYERS, 1, 1);
+        }
     }
 
     @Override
@@ -119,6 +124,8 @@ public class ChronosClockItem extends Item {
 
     @Override
     public ItemStack finishUsing(ItemStack stack, World world, LivingEntity user) {
+
+        // Client behavior
         if (world.isClient) {
             MinecraftClient client = MinecraftClient.getInstance();
             ClientPlayerEntity clientPlayer = MinecraftClient.getInstance().player;
@@ -153,6 +160,8 @@ public class ChronosClockItem extends Item {
             }
             return stack;
         }
+
+        // Server behavior
         if (user instanceof PlayerEntity player && player.getServer() != null) {
             boolean hasEnoughHealth = player.isCreative() || player.getHealth() > ChronosConfig.getHealthCost();
             boolean hasEnoughXp = player.isCreative() || player.totalExperience >= ChronosConfig.getXpCost();
@@ -165,13 +174,18 @@ public class ChronosClockItem extends Item {
                 TickrateApi.setServerTickrate(oldServerTickrate != storedTickrate ? storedTickrate : DEFAULT_TICKRATE, player.getServer());
                 float newServerTickrate = TickrateApi.getServerTickrate(server);
 
+                int resetTimer = ChronosConfig.getResetTimer();
+                if (newServerTickrate != DEFAULT_TICKRATE && resetTimer != 0) {
+                    ((PlayerEntityExt)player).setResetTimer(resetTimer);
+                }
+
                 if (player.isCreative() || oldServerTickrate == newServerTickrate) {
                     player.getItemCooldownManager().set(this, 40);
                 }
                 else {
                     player.getItemCooldownManager().set(this, ChronosConfig.getCooldown());
                     if (!player.isCreative()) {
-                        player.damage(DamageSource.MAGIC, ChronosConfig.getHealthCost());
+                        player.damage(DamageSource.OUT_OF_WORLD, ChronosConfig.getHealthCost());
                         player.addExperience(-ChronosConfig.getXpCost());
                     }
                     player.incrementStat(Stats.USED.getOrCreateStat(this));
@@ -179,8 +193,6 @@ public class ChronosClockItem extends Item {
                         stack.damage(1, player, p -> p.sendToolBreakStatus(player.getActiveHand()));
                     }
                 }
-                stack.getOrCreateNbt();
-                assert stack.getNbt() != null;
                 stack.getOrCreateNbt().putFloat("storedTickrate", storedTickrate);
             }
             else {

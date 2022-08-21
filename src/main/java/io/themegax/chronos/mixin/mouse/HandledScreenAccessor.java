@@ -1,4 +1,4 @@
-package io.themegax.chronos.mixin;
+package io.themegax.chronos.mixin.mouse;
 
 import net.minecraft.client.gui.screen.ingame.HandledScreen;
 import net.minecraft.screen.slot.Slot;

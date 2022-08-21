@@ -1,12 +1,13 @@
 package io.themegax.chronos;
 
 import io.themegax.chronos.config.ChronosConfig;
-import io.themegax.chronos.mixin.HandledScreenAccessor;
+import io.themegax.chronos.mixin.mouse.HandledScreenAccessor;
 import io.themegax.chronos.sound.ChronosSoundEvents;
 import me.lortseam.completeconfig.gui.ConfigScreenBuilder;
 import me.lortseam.completeconfig.gui.cloth.ClothConfigScreenBuilder;
 import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
+import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
 import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.screen.DownloadingTerrainScreen;
@@ -18,14 +19,14 @@ import net.minecraft.client.world.ClientWorld;
 import net.minecraft.item.ItemStack;
 import net.minecraft.screen.slot.Slot;
 import net.minecraft.sound.SoundCategory;
+import net.minecraft.sound.SoundEvents;
 import net.minecraft.text.Text;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.math.MathHelper;
 
 import javax.annotation.Nullable;
 
-import static io.themegax.chronos.ChronosMain.CHRONOS_CLOCK;
-import static io.themegax.chronos.ChronosMain.modID;
+import static io.themegax.chronos.ChronosMain.*;
 
 public class ChronosClient implements ClientModInitializer {
 	boolean ticker = false;
@@ -49,6 +50,17 @@ public class ChronosClient implements ClientModInitializer {
 		if (FabricLoader.getInstance().isModLoaded("cloth-config")) {
 			ConfigScreenBuilder.setMain(modID, new ClothConfigScreenBuilder());
 		}
+
+		ClientPlayNetworking.registerGlobalReceiver(
+				BELLSOUND_PACKET_ID, (client, handler, buf, responseSender) -> client.execute(this::playBellOnClient));
+	}
+
+	private void playBellOnClient() {
+		MinecraftClient client = MinecraftClient.getInstance();
+		ClientPlayerEntity clientPlayer = client.player;
+		assert clientPlayer != null;
+		clientPlayer.playSound(SoundEvents.BLOCK_BELL_USE, SoundCategory.PLAYERS, 1f, 1f);
+		client.getSoundManager().stopSounds(ChronosSoundEvents.RESONATE.getId(), SoundCategory.PLAYERS);
 	}
 
 	private void onWorldTick(ClientWorld clientWorld) {

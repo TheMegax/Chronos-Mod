@@ -4,11 +4,17 @@
   "package": "io.themegax.chronos.mixin",
   "compatibilityLevel": "JAVA_17",
   "mixins": [
-
+    "enchantment.EnchantmentMixin",
+    "item.ItemStackMixin",
+    "player.PlayerEntityMixin",
+    "player.ServerPlayerEntityMixin",
+    "enchantment.UnbreakingEnchantmentMixin"
   ],
   "client": [
-    "MouseMixin",
-    "HandledScreenAccessor"
+    "mouse.HandledScreenAccessor",
+    "mouse.MouseMixin",
+    "sound.SoundManagerAccessor",
+    "sound.SoundSystemMixin"
   ],
   "injectors": {
     "defaultRequire": 1

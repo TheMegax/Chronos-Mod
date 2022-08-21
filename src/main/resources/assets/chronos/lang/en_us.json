@@ -14,7 +14,9 @@
   "subtitles.chronos.chronos_deactivate" : "Clock Failing",
   "config.chronos.xpCost" : "Experience cost",
   "config.chronos.healthCost" : "Health cost",
+  "config.chronos.repairCostLevels" : "Repair cost in levels",
   "config.chronos.maxDurability" : "Clock durability (requires restart)",
-  "config.chronos.cooldownSeconds" : "Clock cooldown",
+  "config.chronos.cooldownSeconds" : "Clock cooldown in seconds",
+  "config.chronos.resetTimerSeconds" : "Clock reset timer in seconds",
   "config.chronos.repairItem" : "Repair item"
 }

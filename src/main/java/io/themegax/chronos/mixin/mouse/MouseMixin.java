@@ -1,4 +1,4 @@
-package io.themegax.chronos.mixin;
+package io.themegax.chronos.mixin.mouse;
 
 import io.themegax.chronos.ChronosClient;
 import net.minecraft.client.MinecraftClient;
