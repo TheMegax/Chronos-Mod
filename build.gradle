@@ -1,7 +1,8 @@
 plugins {
-	id 'fabric-loom' version '0.11-SNAPSHOT'
+	id 'fabric-loom' version '0.11.+'
 	id 'maven-publish'
 	id "com.modrinth.minotaur" version "2.+"
+	id 'com.matthewprenger.cursegradle' version '1.4.0'
 }
 
 sourceCompatibility = JavaVersion.VERSION_17
@@ -10,6 +11,10 @@ targetCompatibility = JavaVersion.VERSION_17
 archivesBaseName = project.archives_base_name
 version = project.mod_version
 group = project.maven_group
+
+def vNum = "1.0.2"
+def vType = "Alpha"
+def clog = "Added timed reset. Now with 5% more time shenanigans!"
 
 repositories {
 	mavenCentral()
@@ -71,12 +76,13 @@ tasks.modrinth.dependsOn(tasks.modrinthSyncBody)
 modrinth {
 	token = System.getenv("MODRINTH_TOKEN") // This is the default. Remember to have the MODRINTH_TOKEN environment variable set or else this will fail, or set it to whatever you want - just make sure it stays private!
 	projectId = "chronos-clock" // This can be the project ID or the slug. Either will work!
-	versionNumber = "1.0.1" // You don't need to set this manually. Will fail if Modrinth has this version already
-	versionName = "Chronos Alpha 1.0.1"
-	versionType = "alpha" // can be 'Release', 'beta' or 'alpha'
+	versionNumber = vNum // You don't need to set this manually. Will fail if Modrinth has this version already
+	versionName = "Chronos ${vType} ${vNum}"
+	versionType = vType.toLowerCase() // can be 'Release', 'beta' or 'alpha'
 	uploadFile = remapJar // With Loom, this MUST be set to `remapJar` instead of `jar`!
 	gameVersions = ["1.19", "1.19.1", "1.19.2"] // Must be an array, even with only one version
 	loaders = ["fabric"] // Must also be an array - no need to specify this if you're using Loom or ForgeGradle
+	changelog = clog
 	dependencies { // A special DSL for creating dependencies
 		// scope.type
 		// The scope can be `required`, `optional`, `incompatible`, or `embedded`
@@ -87,6 +93,35 @@ modrinth {
 		required.project "fabric-api"
 	}
 	syncBodyFrom = rootProject.file("README.md").text
+}
+
+curseforge {
+	if (System.getenv('CURSEFORGE_TOKEN') != null) {
+		apiKey = System.getenv('CURSEFORGE_TOKEN')
+	} else {
+		apiKey = "DUMMY"
+	}
+	project {
+		id = '659731'
+		changelog = clog
+		releaseType = vType.toLowerCase()
+		addGameVersion '1.19'
+		addGameVersion '1.19.1'
+		addGameVersion '1.19.2'
+		addGameVersion 'Fabric'
+		addGameVersion 'Java 17'
+		addGameVersion 'Java 18'
+
+		mainArtifact(remapJar) {
+			displayName = "Chronos ${vType} ${vNum}"
+			relations {
+				requiredDependency 'fabric-api'
+				requiredDependency 'slowmo-lib'
+				optionalDependency 'cloth-config'
+				optionalDependency 'modmenu'
+			}
+		}
+	}
 }
 
 // configure the maven publication

@@ -178,6 +178,9 @@ public class ChronosClockItem extends Item {
                 if (newServerTickrate != DEFAULT_TICKRATE && resetTimer != 0) {
                     ((PlayerEntityExt)player).setResetTimer(resetTimer);
                 }
+                else if (newServerTickrate == DEFAULT_TICKRATE) {
+                    ((PlayerEntityExt)player).setResetTimer(0);
+                }
 
                 if (player.isCreative() || oldServerTickrate == newServerTickrate) {
                     player.getItemCooldownManager().set(this, 40);
